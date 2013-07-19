@@ -31,7 +31,7 @@ class RedisSubscriptionWorker(threading.Thread):
                 with self._callbacks_lock:
                     callbacks = list(self._callbacks)
                 for cb in callbacks:
-                    IOLoop.instance().add_callback(lambda: cb(message))
+                    IOLoop.instance().add_callback(lambda cb=cb: cb(message))
 
 class RedisSubscriptionManager(object):
     def __init__(self):
@@ -48,8 +48,8 @@ class SubscribeHandler(RequestHandler):
     @asynchronous
     @gen.engine
     def get(self, channel):
+        logging.info("Client subscribing to %s", channel);
         def on_result(message):
-            logging.info("Writing results to client: %s", message)
             self.write("%s\n" % (json.dumps({ 'channel': message['channel'],
                                               'data': message['data'] })))
             self.flush()
